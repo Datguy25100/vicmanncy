@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: `Vicmanny Integrated <${fromEmail}>`,
         to: toEmail,
-        replyTo: parsed.data.email,
+        reply_to: parsed.data.email,
         subject,
         text: `${heading}\n\n${formatEmailBody(parsed.data)}`,
       });
