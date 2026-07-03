@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { contactSchema, quoteSchema } from "@/lib/schemas";
 
+function formatEmailBody(data: Record<string, any>) {
+  return Object.entries(data)
+    .map(([key, value]) => {
+      const label = key
+        .replace(/([A-Z])/g, " $1") // camelCase -> spaced
+        .replace(/^./, (str) => str.toUpperCase()); // capitalize first letter
+      return `${label}: ${value}`;
+    })
+    .join("\n");
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const isQuote = "propertyType" in body;
@@ -26,12 +37,16 @@ export async function POST(req: NextRequest) {
         ? `New quote request from ${parsed.data.name}`
         : `New contact form message from ${parsed.data.name}`;
 
+      const heading = isQuote
+        ? "You've received a new quote request"
+        : "You've received a new contact form message";
+
       await resend.emails.send({
-        from: fromEmail,
+        from: `Vicmanny Integrated <${fromEmail}>`,
         to: toEmail,
         replyTo: parsed.data.email,
         subject,
-        text: JSON.stringify(parsed.data, null, 2),
+        text: `${heading}\n\n${formatEmailBody(parsed.data)}`,
       });
     } else {
       // No email provider configured yet — log so local dev still works.
